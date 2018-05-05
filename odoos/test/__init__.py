@@ -1,0 +1,2 @@
+import configtest
+from . import *
