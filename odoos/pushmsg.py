@@ -44,13 +44,11 @@ class PuschAliexpress(object):
         params = self.stock.get()
         try:
             res = self.oc.create_aliexpress_order(params)
-            if 'success' in res and res['success']:
-                if res['result']:
-                    _logging.info('create aliexpress order success with aliexpress_name = {}'.format(res['result']))
-                else:
-                    _logging.info('{} allready excit!'.format(params['order_id']))
+            if res.get('result', False):
+                _logging.info('create aliexpress order success with aliexpress_name = {}'.format(res['result']))
             else:
-                _logging.error(res['error'] if 'error' in res else "pushmsg call_odoom unknow error")
+                _logging.info('allready excit!')
         except Exception, e:
             _logging.error(e)
             self.stock.put(params)
+            _logging.info("reset params into unhandle stock")

@@ -90,14 +90,13 @@ class Aliexpress(object):
                               "create_date_start": create_date_start,
                               "page": page,
                               "page_size": page_size,
-                              "order_status": order_status[2]
+                              "order_status": order_status[0]
                               }
                 try:
                     resp = req.getResponse(config.get("session", shop))
                     total_item = int(resp.get('aliexpress_trade_redefining_findorderlistsimplequery_response', {}).get('result', {}).get('total_item', total_item))
                     _logging.info("total_item=" + str(total_item) + "  page=" + str(page))
                     li = self.load_findorderlistsimplequery_response(resp, shop)
-                    _logging.info(li)
                     order_lists += li
                 except Exception, e:
                     _logging.error(e)
@@ -107,14 +106,15 @@ class Aliexpress(object):
                 page += 1
             if order_lists:
                 order_lists = self.oc.check_repeat(order_lists)
-                self.stock_order_ids.put_list(order_lists)
-                _logging.info("put_list into stock_order_ids")
+                lis = order_lists.get('result', [])
+                self.stock_order_ids.put_list(lis)
+                _logging.info("put_list into stock_order_ids" + str(lis))
             # TODO 将create_date_end，create_date_start，page，page_size 回写回配置文件
             self._write_next_start_end_time(create_date_start, create_date_end, shop)
 
     def get_sale_msg(self):
         package_size = config.get('package_size') or 50
-        while self.stock_order_ids.ssize() > 0:
+        if self.stock_order_ids.ssize() > 0:
             _logging.info("get order masg, package_size = " + str(package_size))
             order_ids = self.stock_order_ids.get_list(package_size)
             _logging.info("order_ids = " + str(order_ids))
@@ -127,14 +127,15 @@ class Aliexpress(object):
                 try:
                     resp = req.getResponse(config.get("session", i[1]))
                     msg = self.load_findorderbyid_response(resp, i[1])
-                    _logging.info(msg)
                     msg_lists.append(msg)
+                    _logging.info("append a msg " + str(i[0]))
                 except Exception, e:
                     _logging.error(e)
                     if hasattr(e, 'errorcode') and e.errorcode == 15:
                         self._send_to_ding("请跳转到：{}进行人工授权".format(self.get_access_token(i[1])))
                     else:
                         self._send_to_ding("拉取订单详情失败：{}".format(i[0]))
+            _logging.info('put msg list' + str(len(msg_lists)))
             self.stock_order_msg.put(msg_lists)
 
     def load_findorderlistsimplequery_response(self, resp, shop):

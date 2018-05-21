@@ -179,6 +179,7 @@ class MyStock(object):
                     if remaining <= 0.0:
                         raise ValueError("栈为空")
                     self.not_empty.wait(remaining)
+            assert isinstance(num, int)
             if self._ssize() < num:
                 res = [] + self.stock
                 self.stock = []
