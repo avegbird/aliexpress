@@ -173,7 +173,7 @@ class Aliexpress(object):
         :return: (create_date_end, create_date_start)
         """
         last_run_time = config.get("last_run_time", shop) or time.time()
-        last_run_time = int((int(float(last_run_time)) - time.time())/60)
+        last_run_time = abs(int((int(float(last_run_time)) - time.time())/60))
         delay_time = config.get("delay_time", shop)
         create_date_end_default = config.get("create_date_end", shop) if config.get("create_date_end", shop) else \
             datetime.now().strftime('%m/%d/%Y %H:%M:%S')
@@ -184,7 +184,7 @@ class Aliexpress(object):
         create_date_start = (datetime.strptime(create_date_start_default, '%m/%d/%Y %H:%M:%S') +
                              relativedelta(minutes=last_run_time)).strftime('%m/%d/%Y %H:%M:%S')
         create_date_end = (datetime.strptime(create_date_end_default, '%m/%d/%Y %H:%M:%S') +
-                             relativedelta(minutes=last_run_time)).strftime('%m/%d/%Y %H:%M:%S')
+                           relativedelta(minutes=last_run_time)).strftime('%m/%d/%Y %H:%M:%S')
         return create_date_end, create_date_start
 
     def _write_next_start_end_time(self, create_date_start, create_date_end, shop=None):
